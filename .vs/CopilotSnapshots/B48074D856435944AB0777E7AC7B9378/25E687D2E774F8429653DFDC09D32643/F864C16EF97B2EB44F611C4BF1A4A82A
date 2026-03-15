@@ -137,8 +137,8 @@ namespace LinqOptimizer.Core
             let template = func.Invoke()
             template
 
-        static member CompileActionTemplateVariadic(parameters : ParameterExpression [], template : QueryExpr, optimize : Func<Expression,Expression>, allowNonPublicMemberAccess : bool) : obj =
-            let func =
+        static member CompileActionTemplateVariadic
+            let func = 
                 if allowNonPublicMemberAccess then
                     CoreHelpers.Compile(template, 
                         fun query -> 
@@ -154,8 +154,8 @@ namespace LinqOptimizer.Core
             let template = func.Invoke()
             template
 
-        static member CompileTemplateToParallelVariadic<'R>(parameters : ParameterExpression [], template : QueryExpr, optimize : Func<Expression,Expression>, allowNonPublicMemberAccess : bool) =
-            let func =
+        static member CompileTemplateToParallelVariadic
+            let func = 
                 if allowNonPublicMemberAccess then
                     CoreHelpers.Compile(template, 
                         fun query -> 

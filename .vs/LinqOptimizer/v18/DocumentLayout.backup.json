@@ -3,24 +3,8 @@
   "WorkspaceRootPath": "D:\\Source\\PortfolioManager\\LinqOptimizer\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Source\\PortfolioManager\\LinqOptimizer\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownPreview",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownPreview"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\plan.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\plan.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\tasks.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\tasks.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+      "AbsoluteMoniker": "D:0:0:{6FEA9D47-1291-40CE-9716-619BCC2F485A}|src\\LinqOptimizer.Core\\LinqOptimizer.Core.fsproj|d:\\source\\portfoliomanager\\linqoptimizer\\src\\linqoptimizer.core\\extensionmethods.fs||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}",
+      "RelativeMoniker": "D:0:0:{6FEA9D47-1291-40CE-9716-619BCC2F485A}|src\\LinqOptimizer.Core\\LinqOptimizer.Core.fsproj|solutionrelative:src\\linqoptimizer.core\\extensionmethods.fs||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,72 +14,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 7,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "tasks.md",
-              "DocumentMoniker": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\tasks.md",
-              "RelativeDocumentMoniker": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\tasks.md",
-              "ToolTip": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\tasks.md",
-              "RelativeToolTip": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\tasks.md",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAmwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-03-15T18:29:30.608Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "plan.md",
-              "DocumentMoniker": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\plan.md",
-              "RelativeDocumentMoniker": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\plan.md",
-              "ToolTip": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\plan.md",
-              "RelativeToolTip": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\plan.md",
-              "ViewState": "AgIAAGoJAAAAAAAAAAAkwKIJAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-03-15T18:16:09.099Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "assessment.md [Preview]",
-              "DocumentMoniker": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "RelativeDocumentMoniker": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "ToolTip": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md [Preview]",
-              "RelativeToolTip": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md [Preview]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-03-15T18:15:18.394Z",
-              "EditorCaption": " [Preview]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "assessment.md",
-              "DocumentMoniker": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "RelativeDocumentMoniker": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "ToolTip": "D:\\Source\\PortfolioManager\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "RelativeToolTip": ".github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAIwFUCAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-03-15T18:15:10.876Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "assessment.md",
-              "DocumentMoniker": "D:\\Source\\PortfolioManager\\LinqOptimizer\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "RelativeDocumentMoniker": "LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "ToolTip": "D:\\Source\\PortfolioManager\\LinqOptimizer\\LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "RelativeToolTip": "LinqOptimizer\\.github\\upgrades\\scenarios\\sdkstyleconversion_ef816d\\assessment.md",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAIwFUCAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-03-15T18:12:05.228Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:1142884834:0:{bf84ea66-d821-4dba-b1b1-2777d8574775}"
@@ -123,6 +43,19 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ExtensionMethods.fs",
+              "DocumentMoniker": "D:\\Source\\PortfolioManager\\LinqOptimizer\\src\\LinqOptimizer.Core\\ExtensionMethods.fs",
+              "RelativeDocumentMoniker": "src\\LinqOptimizer.Core\\ExtensionMethods.fs",
+              "ToolTip": "D:\\Source\\PortfolioManager\\LinqOptimizer\\src\\LinqOptimizer.Core\\ExtensionMethods.fs",
+              "RelativeToolTip": "src\\LinqOptimizer.Core\\ExtensionMethods.fs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001348|",
+              "WhenOpened": "2026-03-15T19:57:00.324Z",
+              "EditorCaption": ""
             }
           ]
         }

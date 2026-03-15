@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Nessos.LinqOptimizer.Tests</RootNamespace>
-    <StartupObject>Nessos.LinqOptimizer.Tests.Program</StartupObject>
+    <RootNamespace>LinqOptimizer.Tests</RootNamespace>
+    <StartupObject>LinqOptimizer.Tests.Program</StartupObject>
     <Configurations>Debug;Release;Release-Mono</Configurations>
   </PropertyGroup>
 

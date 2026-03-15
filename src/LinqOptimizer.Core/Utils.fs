@@ -1,4 +1,4 @@
-﻿namespace Nessos.LinqOptimizer.Core
+﻿namespace LinqOptimizer.Core
 open System
 open System.Collections.Concurrent
 

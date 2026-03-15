@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using Nessos.LinqOptimizer.Base;
-using QExpr = Nessos.LinqOptimizer.Core.QueryExpr;
+using LinqOptimizer.Base;
+using QExpr = LinqOptimizer.Core.QueryExpr;
 
-namespace Nessos.LinqOptimizer.CSharp
+namespace LinqOptimizer.CSharp
 {
     /// <summary>
     /// Provides a set of static methods for creating queries.

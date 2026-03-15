@@ -1,42 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LinqOptimizer.Core.xml</DocumentationFile>
+	<TargetFramework>net10.0</TargetFramework>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LinqOptimizer.Core.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <Tailcalls>false</Tailcalls>
+	<Tailcalls>false</Tailcalls>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Tailcalls>true</Tailcalls>
-    <DefineConstants>$(DefineConstants);TRACE;CORE_COMPILETOMETHOD</DefineConstants>
+	<Tailcalls>true</Tailcalls>
+	<DefineConstants>$(DefineConstants);TRACE;CORE_COMPILETOMETHOD</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Utils.fs" />
-    <Compile Include="QueryExpr.fs" />
-    <Compile Include="Collector.fs" />
-    <Compile Include="ParallelismHelpers.fs" />
-    <Compile Include="SortingHelpers.fs" />
-    <Compile Include="GroupingHelpers.fs" />
-    <Compile Include="ExpressionHelpers.fs" />
-    <Compile Include="ReflectionHelpers.fs" />
-    <Compile Include="ExpressionTransformer.fs" />
-    <Compile Include="ConstantLiftingTransformer.fs" />
-    <Compile Include="AnonymousTypeEraser.fs" />
-    <Compile Include="FreeVariablesVisitor.fs" />
-    <Compile Include="TupleElimination.fs" />
-    <Compile Include="TypeCollectorVisitor.fs" />
-    <Compile Include="AccessChecker.fs" />
-    <Compile Include="Compiler.fs" />
-    <Compile Include="CSharpExpressionOptimizer.fs" />
-    <Compile Include="FSharpExpressionOptimizer.fs" />
-    <Compile Include="Session.fs" />
-    <Compile Include="ExtensionMethods.fs" />
+	<Compile Include="AssemblyInfo.fs" />
+	<Compile Include="Utils.fs" />
+	<Compile Include="QueryExpr.fs" />
+	<Compile Include="Collector.fs" />
+	<Compile Include="ParallelismHelpers.fs" />
+	<Compile Include="SortingHelpers.fs" />
+	<Compile Include="GroupingHelpers.fs" />
+	<Compile Include="ExpressionHelpers.fs" />
+	<Compile Include="ReflectionHelpers.fs" />
+	<Compile Include="ExpressionTransformer.fs" />
+	<Compile Include="ConstantLiftingTransformer.fs" />
+	<Compile Include="AnonymousTypeEraser.fs" />
+	<Compile Include="FreeVariablesVisitor.fs" />
+	<Compile Include="TupleElimination.fs" />
+	<Compile Include="TypeCollectorVisitor.fs" />
+	<Compile Include="AccessChecker.fs" />
+	<Compile Include="Compiler.fs" />
+	<Compile Include="CSharpExpressionOptimizer.fs" />
+	<Compile Include="FSharpExpressionOptimizer.fs" />
+	<Compile Include="Session.fs" />
+	<Compile Include="ExtensionMethods.fs" />
   </ItemGroup>
 
 </Project>

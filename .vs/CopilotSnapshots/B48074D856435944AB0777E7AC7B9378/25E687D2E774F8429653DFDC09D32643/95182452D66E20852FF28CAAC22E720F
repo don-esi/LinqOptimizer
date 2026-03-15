@@ -8,6 +8,7 @@ namespace LinqOptimizer.Core
     open System.Linq.Expressions
     open System.Reflection
     open System.Reflection.Emit
+    open ExpressionHelpers
 
 
     module CompiledThunks =
@@ -31,7 +32,7 @@ namespace LinqOptimizer.Core
             //    let count   = t.GetFields().First(fun f -> f.Name.EndsWith "__count").GetValue(enumerable)
             //    RepeatGenerator(Expression.Convert(constant element, ty) , constant count)
             //| _ -> 
-                Source (Expression.Constant(enumerable) :> Expression, ty, QueryExprType.Sequential)
+                Source (constant enumerable, ty, QueryExprType.Sequential)
 
         static member private CompileToMethod(query : QueryExpr, compile : QueryExpr -> Expression) : Func<'T> =
             let source = query.ToString()
@@ -126,47 +127,47 @@ namespace LinqOptimizer.Core
                     CoreHelpers.Compile(template, 
                         fun query -> 
                             let expr = Compiler.compileToSequential query optimize.Invoke
-                            let lam = Expression.Lambda(expr, parameters)
+                            let lam = lambda parameters expr
                             lam :> Expression) 
                 else
                     CoreHelpers.CompileToMethod(template, 
                         fun query -> 
                             let expr = Compiler.compileToSequential query optimize.Invoke
-                            let lam = Expression.Lambda(expr, parameters)
+                            let lam = lambda parameters expr
                             lam :> _) 
             let template = func.Invoke()
             template
 
         static member CompileActionTemplateVariadic(parameters : ParameterExpression [], template : QueryExpr, optimize : Func<Expression,Expression>, allowNonPublicMemberAccess : bool) : obj =
-            let func =
+            let func = 
                 if allowNonPublicMemberAccess then
                     CoreHelpers.Compile(template, 
                         fun query -> 
                             let expr = Compiler.compileToSequential query optimize.Invoke
-                            let lam = Expression.Lambda(expr, parameters)
+                            let lam = lambda parameters expr
                             lam :> Expression) 
                 else
                     CoreHelpers.CompileToMethod(template, 
                         fun query -> 
                             let expr = Compiler.compileToSequential query optimize.Invoke
-                            let lam = Expression.Lambda(expr, parameters)
+                            let lam = lambda parameters expr
                             lam :> _) 
             let template = func.Invoke()
             template
 
         static member CompileTemplateToParallelVariadic<'R>(parameters : ParameterExpression [], template : QueryExpr, optimize : Func<Expression,Expression>, allowNonPublicMemberAccess : bool) =
-            let func =
+            let func = 
                 if allowNonPublicMemberAccess then
                     CoreHelpers.Compile(template, 
                         fun query -> 
                             let expr = Compiler.compileToParallel query optimize.Invoke
-                            let lam = Expression.Lambda(expr, parameters)
+                            let lam = lambda parameters expr
                             lam :> Expression) 
                 else
                     CoreHelpers.CompileToMethod(template, 
                         fun query -> 
                             let expr = Compiler.compileToParallel query optimize.Invoke
-                            let lam = Expression.Lambda(expr, parameters)
+                            let lam = lambda parameters expr
                             lam :> _) 
             let template = func.Invoke()
             template

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Nessos.LinqOptimizer.Core;
+using LinqOptimizer.Core;
 
-namespace Nessos.LinqOptimizer.Base
+namespace LinqOptimizer.Base
 {
     /// <summary>
     /// This interface represents an optimized parallel query.

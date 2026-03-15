@@ -1,4 +1,4 @@
-﻿namespace Nessos.LinqOptimizer.Core
+﻿namespace LinqOptimizer.Core
     
     open System
     open System.Collections
@@ -7,7 +7,7 @@
     open System.Linq.Expressions
     open System.Reflection
     open System.Text
-    open Nessos.LinqOptimizer.Core.Utils
+    open Utils
 
 //    // Typed Wrapper for QueryExpr 
 //    type QueryExpr<'T>(queryExpr : QueryExpr) =
