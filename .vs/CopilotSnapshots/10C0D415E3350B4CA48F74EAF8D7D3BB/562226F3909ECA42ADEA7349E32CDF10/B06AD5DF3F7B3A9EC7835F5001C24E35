@@ -1,0 +1,980 @@
+﻿# SDK-Style Project Conversion Plan
+**LinqOptimizer Solution**
+
+---
+
+## Table of Contents
+- [Executive Summary](#executive-summary)
+- [Migration Strategy](#migration-strategy)
+- [Detailed Dependency Analysis](#detailed-dependency-analysis)
+- [Project-by-Project Migration Plans](#project-by-project-migration-plans)
+- [Risk Management](#risk-management)
+- [Testing & Validation Strategy](#testing--validation-strategy)
+- [Complexity & Effort Assessment](#complexity--effort-assessment)
+- [Source Control Strategy](#source-control-strategy)
+- [Success Criteria](#success-criteria)
+
+---
+
+## Executive Summary
+
+### Scenario Description
+Convert all 6 projects in the LinqOptimizer solution from legacy non-SDK-style project format to modern SDK-style format while maintaining .NET Framework 4.8 as the target framework.
+
+### Scope
+- **6 projects total**: 3 C# (.csproj), 3 F# (.fsproj)
+- **All projects** currently use legacy project format with verbose XML
+- **3 projects** use packages.config NuGet management (must migrate to PackageReference)
+- **4 projects** have AssemblyInfo files requiring conflict resolution
+- **2 test projects** have legacy NuGet build infrastructure to remove
+
+### Current State
+- All projects target .NET Framework 4.8
+- Mixed language solution (C# and F#)
+- Clean acyclic dependency graph (3 levels deep)
+- Solution configurations: Debug, Release, Release-Mono
+- Assembly version: 0.6.3 across all projects
+- No existing Directory.Build.props or Directory.Build.targets
+- packages/ folder at solution root with ~47 restored packages
+
+### Target State
+- All 6 projects converted to SDK-style format
+- PackageReference NuGet management (no packages.config)
+- Simplified, concise project files
+- F# file ordering preserved (critical for compilation)
+- Custom build configurations maintained (Release-Mono, CORE_COMPILETOMETHOD)
+- AssemblyInfo handling strategy applied consistently
+
+### Selected Strategy
+**All-At-Once Strategy** — All projects upgraded simultaneously in a single coordinated operation.
+
+**Rationale**:
+- Small solution (6 projects) suitable for atomic conversion
+- All projects currently on .NET Framework 4.8 (homogeneous framework)
+- Clean dependency structure with no circular references
+- Assessment shows no blocking compatibility issues
+- Faster completion time with single validation cycle
+- No multi-targeting complexity needed
+
+### Complexity Assessment
+**Classification**: Medium
+
+**Metrics**:
+- 6 projects (≤15 threshold)
+- Dependency depth: 3 levels (≤4 threshold)
+- No circular dependencies
+- 2 high-risk factors:
+  1. F# compilation order preservation (29 ordered files)
+  2. Duplicate FSharp.Core reference in one project
+
+**Mixed-language complexity**: C# projects allow SDK auto-globbing of source files, but F# projects require explicit ordered `<Compile>` elements due to F#'s order-sensitive compilation model.
+
+### Critical Issues Identified
+1. **F# File Ordering** (Severity: Critical): 29 F# source files across 3 projects must maintain exact compilation order
+2. **Duplicate FSharp.Core Reference** (Severity: Critical): LinqOptimizer.Tests.FSharp has conflicting FSharp.Core references
+3. **packages.config Migration** (Severity: High): 3 projects with 13 total package entries
+4. **Legacy NuGet Infrastructure** (Severity: High): Test projects contain obsolete build targets and imports
+
+### Recommended Approach
+All-At-Once conversion with dependency-ordered execution: convert all projects in a single operation following topological order (dependencies first), then build entire solution and fix all issues together. This approach minimizes iteration cycles and leverages the solution's clean structure.
+
+### Iteration Strategy Used
+Phase-based detail generation:
+- **Phase 1: Discovery** (completed): Classified complexity, determined strategy
+- **Phase 2: Foundation** (next): Fill dependency analysis, migration strategy, and project stubs
+- **Phase 3: Dynamic Detail** (final): Complete all project-specific migration plans in topological order
+
+---
+
+## Migration Strategy
+
+### Approach Selection
+
+**Selected**: **All-At-Once Strategy** — Atomic conversion of all 6 projects in a single coordinated operation.
+
+**Justification**:
+1. **Solution size**: 6 projects (well below 30-project threshold for All-At-Once)
+2. **Homogeneous framework**: All projects currently on .NET Framework 4.8
+3. **Clean dependencies**: Acyclic graph with clear forward dependencies
+4. **Assessment results**: No blocking compatibility issues identified
+5. **Faster completion**: Single validation cycle vs. incremental approach
+6. **Lower coordination overhead**: No multi-targeting or intermediate states
+
+### All-At-Once Strategy Rationale
+
+**Atomic Operation Principle**: All project files are updated to SDK-style format simultaneously. All packages.config entries are migrated to PackageReference. All legacy infrastructure is removed. All issues are fixed together.
+
+**Why this approach works here**:
+- Small codebase (6 projects, <100 source files total)
+- Strong assessment confidence (all issues identified and understood)
+- No runtime compatibility concerns (staying on net4.8)
+- Clean build verification after single atomic update
+
+**Alternatives considered and rejected**:
+- **Incremental/Phased**: Would add unnecessary iteration overhead for a 6-project solution
+- **Per-project sequential**: Would create unstable intermediate states during mixed SDK/legacy references
+
+### Dependency-Based Ordering Rationale
+
+**All-At-Once execution order** (for verification and issue resolution):
+
+1. **LinqOptimizer.Core (F#)** — Foundation library, no dependencies
+   - Convert first to establish F# SDK-style baseline
+   - Resolves FSharp.Core packages.config migration pattern
+   - Validates F# file ordering preservation approach
+
+2. **LinqOptimizer.Base (C#)** — Depends on Core
+   - Simple C# library conversion (no packages)
+   - Validates cross-language (C# → F#) project reference
+
+3. **LinqOptimizer.FSharp (F#)** — Depends on Base and Core
+   - Validates GAC FSharp.Core to SDK implicit reference migration
+   - Validates F# → C# → F# reference chain
+
+4. **LinqOptimizer.Tests.FSharp (F#)** — Depends on FSharp, Base, Core
+   - Critical: resolves duplicate FSharp.Core reference issue
+   - Validates packages.config migration in test project
+   - Validates removal of legacy NuGet infrastructure
+
+5. **LinqOptimizer.CSharp (C#)** — Depends on Base and Core
+   - Simple C# library (parallel to FSharp in dependency tree)
+
+6. **LinqOptimizer.Tests.CSharp (C#)** — Depends on CSharp, Base, Core, Tests.FSharp
+   - Most complex: cross-test reference, Release-Mono config
+   - Validates complete solution build
+
+**Rationale**: Follow topological order (dependencies first) to isolate issues per project during validation. Although conversion is atomic, verification proceeds incrementally to provide clear error context.
+
+### Parallel vs Sequential Execution
+
+**Conversion**: Atomic simultaneous update (All-At-Once)  
+**Verification**: Sequential in dependency order for clear diagnostics
+
+**Projects that can be validated in parallel** (after their dependencies):
+- LinqOptimizer.CSharp and LinqOptimizer.FSharp (both depend on Base/Core, no interdependency)
+
+**Projects requiring sequential validation**:
+- Test projects must follow their respective library projects
+- Tests.CSharp must follow Tests.FSharp (cross-test dependency)
+
+### Phase Definitions
+
+**All-At-Once Strategy: Single atomic phase with structured verification**
+
+#### Phase 0: Preparation
+**Purpose**: Ensure prerequisites are met before atomic conversion.
+
+**Actions**:
+- Verify .NET SDK supports SDK-style projects targeting net4.8
+- Verify SDK supports F# SDK-style projects
+- Create backup/branch for conversion (see Source Control Strategy)
+- Document current assembly versions (0.6.3)
+
+**Deliverables**: Prerequisites validated, branch ready
+
+---
+
+#### Phase 1: Atomic SDK-Style Conversion
+**Purpose**: Convert all 6 projects to SDK-style format in a single coordinated operation.
+
+**Operations** (performed as atomic batch):
+1. **Convert all 6 project files to SDK-style**
+   - Use conversion tool for initial transformation
+   - Preserve F# file ordering (explicit `<Compile>` elements)
+   - Set `TargetFramework=net48` in all projects
+   - Preserve custom build configurations (Release-Mono, CORE_COMPILETOMETHOD)
+
+2. **Migrate all packages.config to PackageReference**
+   - LinqOptimizer.Core: FSharp.Core 11.0.100 → remove (SDK implicit)
+   - LinqOptimizer.Tests.CSharp: 6 packages → PackageReference
+   - LinqOptimizer.Tests.FSharp: 6 packages → PackageReference
+
+3. **Handle AssemblyInfo files**
+   - Set `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>` in all 4 projects with AssemblyInfo files
+   - Keeps existing version attributes (0.6.3) intact
+
+4. **Remove legacy NuGet infrastructure**
+   - Delete `EnsureNuGetPackageBuildImports` targets in test projects
+   - Remove `<Import>` of NuGet.targets, NUnit.props, System.ValueTuple.targets
+   - Remove `RestorePackages`, `SolutionDir` properties
+
+5. **Clean up obsolete F# project elements**
+   - Remove `Choose`/`FSharpTargetsPath` blocks from all 3 F# projects
+   - Remove `TargetFSharpCoreVersion` property
+   - Remove `MinimumVisualStudioVersion` property
+   - Remove explicit GAC FSharp.Core references (SDK provides implicit reference)
+
+6. **Resolve duplicate FSharp.Core in Tests.FSharp**
+   - Remove both HintPath and GAC FSharp.Core references
+   - Rely on SDK implicit FSharp.Core reference
+
+7. **Remove packages.config files**
+   - Delete src\LinqOptimizer.Core\packages.config
+   - Delete tests\LinqOptimizer.Tests.CSharp\packages.config
+   - Delete tests\LinqOptimizer.Tests.FSharp\packages.config
+
+8. **Remove unnecessary package: System.ValueTuple**
+   - Omit System.ValueTuple from PackageReference (inbox in net4.8/net472+)
+
+9. **Restore dependencies**
+   - `dotnet restore LinqOptimizer.sln`
+
+10. **Build entire solution**
+    - `dotnet build LinqOptimizer.sln`
+
+11. **Fix all compilation errors**
+    - Address any SDK-style conversion issues
+    - Fix any F# file ordering issues (if detected)
+    - Fix any breaking changes from package updates
+    - Reference plan's "Expected Breaking Changes" sections below
+
+12. **Rebuild solution to verify fixes**
+    - `dotnet build LinqOptimizer.sln --no-restore`
+    - Ensure 0 errors, 0 warnings (or acceptable warnings documented)
+
+**Deliverables**: All 6 projects converted to SDK-style, solution builds successfully with 0 errors.
+
+**Expected outcome**: Solution builds cleanly in Release and Debug configurations.
+
+---
+
+#### Phase 2: Test Validation
+**Purpose**: Execute all test projects to ensure functional correctness after conversion.
+
+**Operations**:
+1. **Verify test framework configuration**
+   - Confirm NUnit test adapter is available (may be transitive from NUnit package)
+   - If tests not discovered: add `<PackageReference Include="NUnit3TestAdapter" Version="..." />`
+
+2. **Execute F# test project**
+   - Run LinqOptimizer.Tests.FSharp
+   - Verify all tests pass
+
+3. **Execute C# test project**
+   - Run LinqOptimizer.Tests.CSharp
+   - Verify all tests pass
+
+4. **Address test failures** (if any)
+   - Investigate failures related to SDK-style changes
+   - Fix issues identified
+   - Re-run tests to confirm
+
+**Deliverables**: All tests pass in both test projects.
+
+---
+
+#### Phase 3: Final Cleanup & Verification
+**Purpose**: Remove obsolete artifacts and perform final validation.
+
+**Operations**:
+1. **Delete solution-level packages folder**
+   - Remove `packages/` directory (no longer used with PackageReference)
+
+2. **Verify Release-Mono configuration**
+   - Build solution with `Release-Mono` configuration
+   - Ensure MONO_BUILD define is active in Tests.CSharp
+
+3. **Verify custom defines in Release builds**
+   - Build Core project in Release configuration
+   - Confirm CORE_COMPILETOMETHOD define is active
+
+4. **Verify documentation XML generation**
+   - Confirm DocumentationFile outputs are generated for library projects
+
+5. **Review app.config binding redirects**
+   - Check if binding redirects are still needed or auto-generated
+   - Remove redundant entries if SDK auto-generated them
+
+6. **Final full solution build in all configurations**
+   - Debug|Any CPU ✓
+   - Release|Any CPU ✓
+   - Release-Mono|Any CPU ✓
+
+**Deliverables**: Clean solution with no obsolete artifacts, all configurations build successfully.
+
+---
+
+### Risk Management Integration
+
+Each phase has associated risks (detailed in Risk Management section):
+- **Phase 0**: F# SDK tooling compatibility risk
+- **Phase 1**: F# file ordering, duplicate FSharp.Core, packages.config migration
+- **Phase 2**: Test execution regression, NUnit adapter discovery
+- **Phase 3**: Binding redirect conflicts
+
+See Risk Management section for mitigation strategies per risk.
+
+---
+
+## Detailed Dependency Analysis
+
+### Dependency Graph
+
+```
+LinqOptimizer.Core (F#) [root - no project dependencies]
+  │
+  ├─→ LinqOptimizer.Base (C#)
+  │     │
+  │     ├─→ LinqOptimizer.CSharp (C#)
+  │     │     │
+  │     │     └─→ LinqOptimizer.Tests.CSharp (C#) [also refs Tests.FSharp]
+  │     │
+  │     └─→ LinqOptimizer.FSharp (F#)
+  │           │
+  │           └─→ LinqOptimizer.Tests.FSharp (F#)
+  │
+  └─→ [All other projects reference Core directly or transitively]
+```
+
+**Dependency Summary**:
+- **Root**: LinqOptimizer.Core (F#) — foundation library with no project dependencies
+- **Level 1**: LinqOptimizer.Base (C#) — depends only on Core
+- **Level 2**: LinqOptimizer.CSharp (C#) and LinqOptimizer.FSharp (F#) — both depend on Base and Core
+- **Level 3**: Both test projects — depend on their respective language library plus shared dependencies
+
+**Cross-test dependency**: LinqOptimizer.Tests.CSharp references LinqOptimizer.Tests.FSharp (likely for shared test helpers).
+
+### Topological Conversion Order
+
+**All-At-Once Strategy: All projects converted simultaneously, but execution must respect dependency order for verification.**
+
+| Order | Project | Language | Type | Dependencies | Complexity |
+|-------|---------|----------|------|--------------|------------|
+| 1 | LinqOptimizer.Core | F# | Library | None | High (21 F# files, packages.config, FSharp.Core migration) |
+| 2 | LinqOptimizer.Base | C# | Library | Core | Low (simple, no packages) |
+| 3 | LinqOptimizer.FSharp | F# | Library | Base, Core | Medium (4 F# files, GAC FSharp.Core reference) |
+| 4 | LinqOptimizer.Tests.FSharp | F# | Exe | FSharp, Base, Core | High (duplicate FSharp.Core, packages.config, legacy NuGet) |
+| 5 | LinqOptimizer.CSharp | C# | Library | Base, Core | Low (simple, no packages) |
+| 6 | LinqOptimizer.Tests.CSharp | C# | Exe | CSharp, Base, Core, Tests.FSharp | High (packages.config, legacy NuGet, Release-Mono config) |
+
+**Note**: While all projects are converted atomically, validation follows this order to catch dependency-related issues early.
+
+### Project Groupings for Atomic Conversion
+
+**All-At-Once Batching**: All 6 projects are updated in a single coordinated operation.
+
+**Grouping for context** (not sequential execution):
+- **Foundation Layer** (2 projects): Core (F#), Base (C#) — no packages.config in Base
+- **Library Layer** (2 projects): CSharp (C#), FSharp (F#) — no packages.config
+- **Test Layer** (2 projects): Tests.CSharp (C#), Tests.FSharp (F#) — both have packages.config
+
+### Critical Path Analysis
+
+**Critical path**: Core → Base → {CSharp, FSharp} → Tests
+
+**Blocking factors** (must be resolved during atomic conversion):
+1. **F# file ordering** — All 3 F# projects (Core: 21 files, FSharp: 4 files, Tests.FSharp: 4 files)
+2. **Duplicate FSharp.Core** in Tests.FSharp — Must be resolved before build succeeds
+3. **packages.config in Core** — Blocks implicit FSharp.Core reference strategy
+
+**No circular dependencies** — Clean forward dependencies enable straightforward atomic conversion.
+
+### Language-Specific Considerations
+
+**C# Projects** (3 projects):
+- SDK-style auto-globs source files (no explicit `<Compile>` needed unless overriding)
+- AssemblyInfo.cs files in Properties\ folders (2 projects) — handle via `GenerateAssemblyInfo=false`
+- Framework references (System, System.Core, etc.) — implicit in SDK-style, remove explicit refs
+
+**F# Projects** (3 projects):
+- **Must** preserve explicit ordered `<Compile>` elements (F# is order-dependent)
+- FSharp.Core references vary by project — all must migrate to SDK implicit reference
+- Legacy FSharpTargetsPath/Choose blocks — remove (SDK handles this)
+- AssemblyInfo.fs files (2 projects) — handle via `GenerateAssemblyInfo=false`
+
+### Cross-Language Dependencies
+
+**C# → F# references**: Base → Core, CSharp → Core, Tests.CSharp → Core & Tests.FSharp  
+**F# → C# references**: FSharp → Base, Tests.FSharp → Base  
+**Mixed**: Both C# and F# projects reference each other
+
+**SDK-style handling**: `<ProjectReference>` elements work identically for cross-language references in SDK-style projects. No special handling required beyond ensuring correct conversion order.
+
+---
+
+## Project-by-Project Migration Plans
+
+### 1. LinqOptimizer.Core (F#)
+
+**Project Path**: `src\LinqOptimizer.Core\LinqOptimizer.Core.fsproj`  
+**Current State**: Legacy F# project, .NET Framework 4.8, packages.config with FSharp.Core 11.0.100  
+**Target State**: SDK-style F# project, .NET Framework 4.8, implicit FSharp.Core reference  
+
+#### Prerequisites
+- None (root dependency, no project references)
+- .NET SDK with F# support installed
+- Conversion tool supports F# projects
+
+#### Project Characteristics
+- **Language**: F#
+- **OutputType**: Library
+- **Source Files**: 21 F# files (ordered)
+- **NuGet Packages**: 1 (FSharp.Core 11.0.100 via packages.config)
+- **Assembly References**: FSharp.Core (HintPath to packages folder), mscorlib, System, System.Core, System.Numerics
+- **Special Properties**: TargetFSharpCoreVersion=4.4.3.0, MinimumVisualStudioVersion=11
+- **Custom Configuration**: Release config has `CORE_COMPILETOMETHOD` define constant
+
+#### Migration Steps
+
+##### 1. Convert to SDK-Style Format
+Use `upgrade_convert_project_to_sdk_style` tool to perform initial conversion.
+
+**Expected transformations**:
+- Remove `xmlns="http://schemas.microsoft.com/developer/msbuild/2003"` namespace
+- Add `Sdk="Microsoft.NET.Sdk"` attribute to `<Project>` element
+- Change `<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>` to `<TargetFramework>net48</TargetFramework>`
+- Remove verbose `<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'>` blocks
+- Consolidate into minimal SDK-style `<PropertyGroup>` sections
+
+**Critical F# requirement**: Ensure all 21 `<Compile Include="...">` elements are preserved in exact order:
+1. AssemblyInfo.fs
+2. Utils.fs
+3. QueryExpr.fs
+4. Collector.fs
+5. ParallelismHelpers.fs
+6. SortingHelpers.fs
+7. GroupingHelpers.fs
+8. ExpressionHelpers.fs
+9. ReflectionHelpers.fs
+10. ExpressionTransformer.fs
+11. ConstantLiftingTransformer.fs
+12. AnonymousTypeEraser.fs
+13. FreeVariablesVisitor.fs
+14. TupleElimination.fs
+15. TypeCollectorVisitor.fs
+16. AccessChecker.fs
+17. Compiler.fs
+18. CSharpExpressionOptimizer.fs
+19. FSharpExpressionOptimizer.fs
+20. Session.fs
+21. ExtensionMethods.fs
+
+**Post-conversion verification**: Check that `<Compile>` order matches above list exactly.
+
+##### 2. Remove Legacy F# Infrastructure
+Delete or update obsolete F# project elements:
+
+**Remove**:
+- `<Choose>` blocks for VisualStudio version-specific FSharpTargetsPath
+- `<MinimumVisualStudioVersion>11</MinimumVisualStudioVersion>`
+- `<Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />`
+- `<TargetFSharpCoreVersion>4.4.3.0</TargetFSharpCoreVersion>`
+- `<Reference Include="FSharp.Core"><HintPath>...</HintPath></Reference>` (explicit FSharp.Core reference)
+
+**Reason**: SDK-style F# projects handle F# targets and FSharp.Core references automatically.
+
+##### 3. Migrate packages.config to PackageReference
+**Current packages.config**:
+```xml
+<package id="FSharp.Core" version="11.0.100" targetFramework="net48" />
+```
+
+**Action**: **Do NOT add `<PackageReference Include="FSharp.Core">`** — SDK provides implicit FSharp.Core reference for F# projects targeting net48.
+
+**Remove**:
+- Delete `src\LinqOptimizer.Core\packages.config` file
+- Remove `<Content Include="packages.config" />` from project file (if present)
+
+**Rationale**: F# SDK automatically references an appropriate FSharp.Core version for the target framework. Explicit package reference would conflict.
+
+##### 4. Handle AssemblyInfo.fs
+**Current**: `AssemblyInfo.fs` with assembly attributes (Title, Product, Company, Version, FileVersion)
+
+**Options**:
+- **Option A** (Recommended): Set `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>` to keep existing AssemblyInfo.fs
+- **Option B**: Delete AssemblyInfo.fs and migrate attributes to project properties
+
+**Recommended**: Option A — preserves existing version 0.6.3 without changes.
+
+**Add to SDK-style project**:
+```xml
+<PropertyGroup>
+  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+</PropertyGroup>
+```
+
+**Keep**: `AssemblyInfo.fs` as first `<Compile>` item (already in correct position).
+
+##### 5. Preserve Custom Build Configurations
+
+**Release configuration must include**:
+```xml
+<PropertyGroup Condition="'$(Configuration)'=='Release'">
+  <DefineConstants>$(DefineConstants);TRACE;CORE_COMPILETOMETHOD</DefineConstants>
+</PropertyGroup>
+```
+
+**Debug configuration**:
+```xml
+<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+  <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+</PropertyGroup>
+```
+
+**F#-specific properties to preserve**:
+```xml
+<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+  <Tailcalls>false</Tailcalls>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)'=='Release'">
+  <Tailcalls>true</Tailcalls>
+  <Optimize>true</Optimize>
+</PropertyGroup>
+```
+
+**Documentation generation**:
+```xml
+<PropertyGroup>
+  <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LinqOptimizer.Core.xml</DocumentationFile>
+</PropertyGroup>
+```
+
+##### 6. Remove Implicit Framework References
+SDK-style projects for net48 implicitly reference:
+- mscorlib
+- System
+- System.Core
+
+**Remove** explicit `<Reference Include="...">` elements for these assemblies.
+
+**Keep** explicit reference (if any) for:
+- System.Numerics (may need explicit reference)
+
+**After conversion, check**: If System.Numerics not resolved, add:
+```xml
+<ItemGroup>
+  <Reference Include="System.Numerics" />
+</ItemGroup>
+```
+
+##### 7. Build and Verify
+Build LinqOptimizer.Core project:
+```powershell
+dotnet build src\LinqOptimizer.Core\LinqOptimizer.Core.fsproj
+```
+
+**Expected outcome**: 0 errors, 0 warnings (or acceptable warnings)
+
+**If errors occur**:
+- **F# file ordering issue**: Verify `<Compile>` order matches original
+- **FSharp.Core version conflict**: Check resolved FSharp.Core version with `dotnet build -v:detailed`
+- **Missing System.Numerics**: Add explicit reference
+- **CORE_COMPILETOMETHOD not defined in Release**: Verify custom configuration preserved
+
+#### Expected Breaking Changes
+**None expected** — This is an SDK-style format conversion with no framework or package version changes.
+
+Possible warnings (acceptable):
+- FS0044 (deprecated construct) — pre-existing in legacy format
+- FS2003 (The option '--times' is for internal use only)
+
+#### Testing Strategy
+**Unit tests**: None in this project (library only)  
+**Integration tests**: Will be validated when dependent projects (Base, CSharp, FSharp, Tests) are built and tested
+
+**Smoke test**:
+- Build succeeds in Debug and Release configurations
+- DocumentationFile generated (LinqOptimizer.Core.xml)
+- Release build includes CORE_COMPILETOMETHOD define
+
+#### Validation Checklist
+- [ ] Project file converted to SDK-style (Sdk="Microsoft.NET.Sdk")
+- [ ] TargetFramework=net48
+- [ ] All 21 F# files in correct `<Compile>` order
+- [ ] No explicit FSharp.Core reference (SDK implicit)
+- [ ] packages.config deleted
+- [ ] Legacy F# infrastructure removed (Choose blocks, TargetFSharpCoreVersion, etc.)
+- [ ] GenerateAssemblyInfo=false (AssemblyInfo.fs preserved)
+- [ ] CORE_COMPILETOMETHOD defined in Release configuration
+- [ ] Tailcalls property preserved (false in Debug, true in Release)
+- [ ] DocumentationFile configured
+- [ ] Project builds successfully in Debug configuration
+- [ ] Project builds successfully in Release configuration
+- [ ] No explicit mscorlib/System/System.Core references
+
+---
+
+### 2. LinqOptimizer.Base (C#)
+
+**Project Path**: `src\LinqOptimizer.Base\LinqOptimizer.Base.csproj`  
+**Current State**: Legacy C# project, .NET Framework 4.8, no packages  
+**Target State**: SDK-style C# project, .NET Framework 4.8  
+
+[Details to be filled]
+
+---
+
+### 3. LinqOptimizer.CSharp (C#)
+
+**Project Path**: `src\LinqOptimizer.CSharp\LinqOptimizer.CSharp.csproj`  
+**Current State**: Legacy C# project, .NET Framework 4.8, no packages  
+**Target State**: SDK-style C# project, .NET Framework 4.8  
+
+[Details to be filled]
+
+---
+
+### 4. LinqOptimizer.FSharp (F#)
+
+**Project Path**: `src\LinqOptimizer.FSharp\LinqOptimizer.FSharp.fsproj`  
+**Current State**: Legacy F# project, .NET Framework 4.8, GAC FSharp.Core reference  
+**Target State**: SDK-style F# project, .NET Framework 4.8, implicit FSharp.Core reference  
+
+[Details to be filled]
+
+---
+
+### 5. LinqOptimizer.Tests.CSharp (C#)
+
+**Project Path**: `tests\LinqOptimizer.Tests.CSharp\LinqOptimizer.Tests.CSharp.csproj`  
+**Current State**: Legacy C# test project (Exe), .NET Framework 4.8, packages.config with 6 packages  
+**Target State**: SDK-style C# test project, .NET Framework 4.8, PackageReference  
+
+[Details to be filled]
+
+---
+
+### 6. LinqOptimizer.Tests.FSharp (F#)
+
+**Project Path**: `tests\LinqOptimizer.Tests.FSharp\LinqOptimizer.Tests.FSharp.fsproj`  
+**Current State**: Legacy F# test project (Exe), .NET Framework 4.8, packages.config, **duplicate FSharp.Core references**  
+**Target State**: SDK-style F# test project, .NET Framework 4.8, PackageReference, single implicit FSharp.Core  
+
+[Details to be filled]
+
+---
+
+---
+
+## Risk Management
+
+### High-Risk Changes
+
+| Project | Risk Level | Description | Mitigation |
+|---------|------------|-------------|------------|
+| LinqOptimizer.Core | High | 21 F# files must preserve exact compilation order | Use SDK conversion tool that maintains explicit `<Compile>` ordering; verify order matches original after conversion |
+| LinqOptimizer.Tests.FSharp | Critical | Duplicate FSharp.Core references (HintPath + GAC) | Remove both explicit references; rely on SDK implicit FSharp.Core; verify single FSharp.Core in resolved dependencies |
+| LinqOptimizer.Core | Medium | FSharp.Core 11.0.100 in packages.config must migrate to implicit reference | Remove packages.config entry; SDK provides implicit reference; verify correct version resolved |
+| LinqOptimizer.Tests.CSharp | Medium | Release-Mono configuration with MONO_BUILD define must be preserved | Explicitly test Release-Mono build after conversion; verify define is active |
+| LinqOptimizer.Core | Medium | CORE_COMPILETOMETHOD define in Release must be preserved | Explicitly test Release build; verify define is active via conditional compilation checks |
+| LinqOptimizer.Tests.CSharp, LinqOptimizer.Tests.FSharp | Medium | packages.config migration (6 packages each) | Migrate to PackageReference; verify package versions and TFM asset selection; remove System.ValueTuple (inbox in net48) |
+| LinqOptimizer.Tests.CSharp, LinqOptimizer.Tests.FSharp | Medium | Legacy NuGet build infrastructure (imports, targets) | Remove all legacy imports/targets; verify build succeeds without them |
+| All F# projects | Medium | Legacy FSharpTargetsPath/Choose blocks | Remove entirely; SDK handles F# targets automatically; verify F# builds succeed |
+
+### Security Vulnerabilities
+
+**None identified** in assessment.
+
+### Contingency Plans
+
+#### If F# File Ordering Breaks Compilation
+
+**Symptoms**: Build errors indicating types/modules not defined, even though source files exist.
+
+**Diagnosis**:
+- Check converted .fsproj for `<Compile Include="...">` order
+- Compare against original legacy .fsproj order
+- Look for auto-globbing patterns (e.g., `<Compile Include="**\*.fs">`) — F# cannot use these
+
+**Resolution**:
+1. Manually restore exact `<Compile>` order from original project file
+2. Ensure no glob patterns; F# requires explicit ordered list
+3. Rebuild and verify compilation succeeds
+
+**Alternative**: Revert project file and retry conversion with explicit instructions to preserve ordering.
+
+---
+
+#### If Duplicate FSharp.Core Causes Reference Conflicts
+
+**Symptoms**: 
+- Build warnings about conflicting FSharp.Core versions
+- Runtime errors loading FSharp.Core assembly
+- Tests fail with type compatibility errors
+
+**Diagnosis**:
+- Run `dotnet build` with detailed verbosity to see resolved FSharp.Core paths
+- Check for multiple FSharp.Core entries in resolved references
+
+**Resolution**:
+1. Verify both explicit FSharp.Core references removed from Tests.FSharp.fsproj
+2. Verify no `<PackageReference Include="FSharp.Core">` in converted project (SDK provides implicit)
+3. Clean bin/obj folders and rebuild
+4. Inspect resolved references: should show single FSharp.Core from SDK
+
+**Alternative**: If conflicts persist, explicitly add `<PackageReference Include="FSharp.Core" Version="6.0.0" />` (or appropriate version for net48) to override SDK default.
+
+---
+
+#### If packages.config Migration Selects Wrong Package Assets
+
+**Symptoms**: 
+- Runtime errors about missing assemblies
+- Tests fail with type load exceptions
+- NUnit tests not discovered
+
+**Diagnosis**:
+- Check resolved package assets: `dotnet build -v:detailed` and search for package name
+- Verify TFM-specific lib folders selected (should be net462 or net48 compatible)
+
+**Resolution**:
+1. Verify `<TargetFramework>net48</TargetFramework>` is set correctly
+2. Check if package has net48/net462/net47 lib folders
+3. If wrong TFM selected, explicitly specify version or add `<PackageReference>` with specific version
+
+**NUnit-specific**: If tests not discovered, add `<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />`.
+
+---
+
+#### If Legacy NuGet Imports Cause Build Failures
+
+**Symptoms**:
+- Build errors about missing .targets files
+- Errors about NuGet.targets not found
+- Errors about missing props files
+
+**Diagnosis**:
+- Check error messages for specific missing file paths
+- Verify those imports were removed from converted project files
+
+**Resolution**:
+1. Open converted project file and search for `<Import` elements
+2. Remove any remaining legacy imports:
+   - `$(SolutionDir)\.nuget\NuGet.targets`
+   - `packages\NUnit.*.props`
+   - `packages\System.ValueTuple.*.targets`
+3. Remove `<Target Name="EnsureNuGetPackageBuildImports">` entirely
+4. Rebuild solution
+
+---
+
+#### If Custom Build Configurations Lost
+
+**Symptoms**:
+- Release-Mono configuration missing or not building
+- MONO_BUILD or CORE_COMPILETOMETHOD defines not active
+
+**Diagnosis**:
+- Check .csproj/.fsproj for `<PropertyGroup Condition="'$(Configuration)'=='Release-Mono'">` or similar
+- Build with specific configuration: `dotnet build -c Release-Mono`
+
+**Resolution**:
+1. Manually add configuration-specific `<PropertyGroup>` to SDK-style project:
+   ```xml
+   <PropertyGroup Condition="'$(Configuration)'=='Release-Mono'">
+     <DefineConstants>$(DefineConstants);MONO_BUILD</DefineConstants>
+   </PropertyGroup>
+   ```
+2. For CORE_COMPILETOMETHOD in Release:
+   ```xml
+   <PropertyGroup Condition="'$(Configuration)'=='Release'">
+     <DefineConstants>$(DefineConstants);CORE_COMPILETOMETHOD</DefineConstants>
+   </PropertyGroup>
+   ```
+3. Rebuild with specific configuration to verify
+
+---
+
+#### If Cross-Language Project References Break
+
+**Symptoms**:
+- Build errors about unable to resolve C# project from F# project (or vice versa)
+- "Project not found" errors
+
+**Diagnosis**:
+- Check `<ProjectReference>` paths are correct (relative paths may have changed)
+- Verify referenced project converted to SDK-style successfully
+
+**Resolution**:
+1. Verify both projects converted to SDK-style
+2. Check `<ProjectReference Include="..\..\path\to\Project.csproj">` paths are correct
+3. Rebuild both projects
+4. If path issues, correct relative path and rebuild
+
+---
+
+#### If Test Execution Fails
+
+**Symptoms**:
+- Tests build but don't execute
+- Test runner cannot discover tests
+- NUnit tests show 0 tests found
+
+**Diagnosis**:
+- Verify test framework NuGet packages installed (NUnit, NUnit3TestAdapter)
+- Check OutputType is correct (Exe for executable test projects)
+
+**Resolution**:
+1. Verify `<PackageReference Include="NUnit" Version="4.5.1" />` exists
+2. Add `<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />` if tests not discovered
+3. Verify `<OutputType>Exe</OutputType>` for test projects
+4. Clean and rebuild test projects
+5. Run tests with: `dotnet test LinqOptimizer.sln`
+
+---
+
+#### If app.config Binding Redirects Conflict
+
+**Symptoms**:
+- Runtime errors about assembly version mismatches
+- Auto-generated binding redirects conflict with existing app.config
+
+**Diagnosis**:
+- Check for duplicate/conflicting binding redirects
+- SDK may auto-generate redirects that conflict with manual ones
+
+**Resolution**:
+1. Option A: Remove manual binding redirects from app.config; let SDK auto-generate
+2. Option B: Add `<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>` to disable SDK auto-generation and keep manual redirects
+3. Option C: Add `<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>` to force auto-generation
+4. Test runtime behavior after changes
+
+---
+
+### Risk Priority
+
+**Critical (must address during atomic conversion)**:
+1. F# file ordering preservation (all 3 F# projects)
+2. Duplicate FSharp.Core resolution (Tests.FSharp)
+
+**High (likely to encounter)**:
+3. packages.config migration package asset selection
+4. Legacy NuGet infrastructure removal
+
+**Medium (monitor during verification)**:
+5. Custom build configuration preservation
+6. Cross-language project references
+7. Test discovery and execution
+
+**Low (unlikely but possible)**:
+8. Binding redirect conflicts
+
+---
+
+## Testing & Validation Strategy
+
+[To be filled]
+
+---
+
+## Complexity & Effort Assessment
+
+### Per-Project Complexity
+
+| Project | Complexity | Dependencies | Risk Factors | Notes |
+|---------|------------|--------------|--------------|-------|
+| LinqOptimizer.Core | High | None | 21 F# files (ordering), packages.config, FSharp.Core migration, CORE_COMPILETOMETHOD define | Foundation project; sets F# conversion pattern |
+| LinqOptimizer.Base | Low | Core | None | Simple C# library, no packages, straightforward conversion |
+| LinqOptimizer.CSharp | Low | Base, Core | None | Simple C# library, no packages, straightforward conversion |
+| LinqOptimizer.FSharp | Medium | Base, Core | 4 F# files (ordering), GAC FSharp.Core removal | F# ordering simpler than Core; FSharp.Core migration |
+| LinqOptimizer.Tests.FSharp | High | FSharp, Base, Core | Duplicate FSharp.Core (critical), 6 packages, legacy NuGet infra, 4 F# files | Most complex F# project; critical duplicate reference issue |
+| LinqOptimizer.Tests.CSharp | High | CSharp, Base, Core, Tests.FSharp | 6 packages, legacy NuGet infra, Release-Mono config, cross-test dependency | Most complex C# project; Release-Mono config preservation |
+
+### Phase Complexity Assessment
+
+#### Phase 0: Preparation
+**Complexity**: Low  
+**Effort**: Minimal  
+**Activities**: Verify SDK, create branch, document versions
+
+---
+
+#### Phase 1: Atomic SDK-Style Conversion
+**Complexity**: High  
+**Effort**: Medium-High  
+**Activities**: 
+- Convert 6 project files (3 C#, 3 F#)
+- Migrate 3 packages.config files (13 total package entries)
+- Handle 4 AssemblyInfo files
+- Preserve 29 F# ordered file entries across 3 projects
+- Remove legacy NuGet infrastructure (4+ import/target blocks)
+- Resolve duplicate FSharp.Core reference
+- Fix all compilation errors
+
+**Critical Success Factors**:
+- F# file ordering preserved exactly
+- Duplicate FSharp.Core resolved
+- All packages migrated correctly
+- Custom configurations intact
+
+---
+
+#### Phase 2: Test Validation
+**Complexity**: Medium  
+**Effort**: Low-Medium  
+**Activities**: 
+- Verify NUnit test adapter
+- Execute 2 test projects
+- Fix test failures (if any)
+
+**Dependencies**: Phase 1 must complete with 0 build errors
+
+---
+
+#### Phase 3: Final Cleanup & Verification
+**Complexity**: Low  
+**Effort**: Low  
+**Activities**: 
+- Delete packages/ folder
+- Verify custom configurations (Release-Mono, CORE_COMPILETOMETHOD)
+- Review binding redirects
+- Full multi-configuration build
+
+**Dependencies**: Phase 2 must complete with all tests passing
+
+---
+
+### Resource Requirements
+
+**Skill Levels Required**:
+- **F# expertise**: High (for file ordering verification, FSharp.Core reference understanding)
+- **C# expertise**: Medium (for standard SDK-style conversion)
+- **MSBuild/SDK knowledge**: High (for custom configuration preservation, understanding SDK-style project structure)
+- **NuGet expertise**: Medium (for packages.config migration, PackageReference troubleshooting)
+
+**Parallel Execution Capacity**:
+- **Conversion**: Single atomic operation (no parallelization)
+- **Verification**: Can validate Base, CSharp, and FSharp projects in parallel after Core succeeds
+- **Testing**: Can run both test projects in parallel
+
+**Tools Required**:
+- .NET SDK with F# support
+- `upgrade_convert_project_to_sdk_style` tool (or equivalent)
+- Git for source control
+- Build tools (`dotnet build`, `dotnet test`)
+
+---
+
+### Relative Effort Distribution
+
+**By Phase**:
+- Phase 0 (Preparation): 5%
+- Phase 1 (Atomic Conversion): 70%
+- Phase 2 (Test Validation): 15%
+- Phase 3 (Final Cleanup): 10%
+
+**By Project** (within Phase 1):
+- LinqOptimizer.Core: 25% (complex F# with packages.config)
+- LinqOptimizer.Tests.FSharp: 25% (critical duplicate FSharp.Core + packages)
+- LinqOptimizer.Tests.CSharp: 20% (packages + legacy NuGet infra)
+- LinqOptimizer.FSharp: 15% (F# ordering + GAC FSharp.Core)
+- LinqOptimizer.Base: 7.5% (simple C#)
+- LinqOptimizer.CSharp: 7.5% (simple C#)
+
+**Note**: Effort percentages are relative complexity indicators, not time estimates. Actual duration depends on tooling, expertise, and issue resolution speed.
+
+---
+
+## Source Control Strategy
+
+[To be filled]
+
+---
+
+## Success Criteria
+
+[To be filled]
+
+---
+
+*This plan was generated by the Planning Agent based on assessment findings.*

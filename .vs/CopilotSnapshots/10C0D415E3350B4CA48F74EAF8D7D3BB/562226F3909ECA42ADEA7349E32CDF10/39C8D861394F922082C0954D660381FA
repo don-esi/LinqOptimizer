@@ -1,0 +1,217 @@
+﻿# SDK-Style Project Conversion Plan
+**LinqOptimizer Solution**
+
+---
+
+## Table of Contents
+- [Executive Summary](#executive-summary)
+- [Migration Strategy](#migration-strategy)
+- [Detailed Dependency Analysis](#detailed-dependency-analysis)
+- [Project-by-Project Migration Plans](#project-by-project-migration-plans)
+- [Risk Management](#risk-management)
+- [Testing & Validation Strategy](#testing--validation-strategy)
+- [Complexity & Effort Assessment](#complexity--effort-assessment)
+- [Source Control Strategy](#source-control-strategy)
+- [Success Criteria](#success-criteria)
+
+---
+
+## Executive Summary
+
+### Scenario Description
+Convert all 6 projects in the LinqOptimizer solution from legacy non-SDK-style project format to modern SDK-style format while maintaining .NET Framework 4.8 as the target framework.
+
+### Scope
+- **6 projects total**: 3 C# (.csproj), 3 F# (.fsproj)
+- **All projects** currently use legacy project format with verbose XML
+- **3 projects** use packages.config NuGet management (must migrate to PackageReference)
+- **4 projects** have AssemblyInfo files requiring conflict resolution
+- **2 test projects** have legacy NuGet build infrastructure to remove
+
+### Current State
+- All projects target .NET Framework 4.8
+- Mixed language solution (C# and F#)
+- Clean acyclic dependency graph (3 levels deep)
+- Solution configurations: Debug, Release, Release-Mono
+- Assembly version: 0.6.3 across all projects
+- No existing Directory.Build.props or Directory.Build.targets
+- packages/ folder at solution root with ~47 restored packages
+
+### Target State
+- All 6 projects converted to SDK-style format
+- PackageReference NuGet management (no packages.config)
+- Simplified, concise project files
+- F# file ordering preserved (critical for compilation)
+- Custom build configurations maintained (Release-Mono, CORE_COMPILETOMETHOD)
+- AssemblyInfo handling strategy applied consistently
+
+### Selected Strategy
+**All-At-Once Strategy** — All projects upgraded simultaneously in a single coordinated operation.
+
+**Rationale**:
+- Small solution (6 projects) suitable for atomic conversion
+- All projects currently on .NET Framework 4.8 (homogeneous framework)
+- Clean dependency structure with no circular references
+- Assessment shows no blocking compatibility issues
+- Faster completion time with single validation cycle
+- No multi-targeting complexity needed
+
+### Complexity Assessment
+**Classification**: Medium
+
+**Metrics**:
+- 6 projects (≤15 threshold)
+- Dependency depth: 3 levels (≤4 threshold)
+- No circular dependencies
+- 2 high-risk factors:
+  1. F# compilation order preservation (29 ordered files)
+  2. Duplicate FSharp.Core reference in one project
+
+**Mixed-language complexity**: C# projects allow SDK auto-globbing of source files, but F# projects require explicit ordered `<Compile>` elements due to F#'s order-sensitive compilation model.
+
+### Critical Issues Identified
+1. **F# File Ordering** (Severity: Critical): 29 F# source files across 3 projects must maintain exact compilation order
+2. **Duplicate FSharp.Core Reference** (Severity: Critical): LinqOptimizer.Tests.FSharp has conflicting FSharp.Core references
+3. **packages.config Migration** (Severity: High): 3 projects with 13 total package entries
+4. **Legacy NuGet Infrastructure** (Severity: High): Test projects contain obsolete build targets and imports
+
+### Recommended Approach
+All-At-Once conversion with dependency-ordered execution: convert all projects in a single operation following topological order (dependencies first), then build entire solution and fix all issues together. This approach minimizes iteration cycles and leverages the solution's clean structure.
+
+### Iteration Strategy Used
+Phase-based detail generation:
+- **Phase 1: Discovery** (completed): Classified complexity, determined strategy
+- **Phase 2: Foundation** (next): Fill dependency analysis, migration strategy, and project stubs
+- **Phase 3: Dynamic Detail** (final): Complete all project-specific migration plans in topological order
+
+---
+
+## Migration Strategy
+
+[To be filled]
+
+---
+
+## Detailed Dependency Analysis
+
+### Dependency Graph
+
+```
+LinqOptimizer.Core (F#) [root - no project dependencies]
+  │
+  ├─→ LinqOptimizer.Base (C#)
+  │     │
+  │     ├─→ LinqOptimizer.CSharp (C#)
+  │     │     │
+  │     │     └─→ LinqOptimizer.Tests.CSharp (C#) [also refs Tests.FSharp]
+  │     │
+  │     └─→ LinqOptimizer.FSharp (F#)
+  │           │
+  │           └─→ LinqOptimizer.Tests.FSharp (F#)
+  │
+  └─→ [All other projects reference Core directly or transitively]
+```
+
+**Dependency Summary**:
+- **Root**: LinqOptimizer.Core (F#) — foundation library with no project dependencies
+- **Level 1**: LinqOptimizer.Base (C#) — depends only on Core
+- **Level 2**: LinqOptimizer.CSharp (C#) and LinqOptimizer.FSharp (F#) — both depend on Base and Core
+- **Level 3**: Both test projects — depend on their respective language library plus shared dependencies
+
+**Cross-test dependency**: LinqOptimizer.Tests.CSharp references LinqOptimizer.Tests.FSharp (likely for shared test helpers).
+
+### Topological Conversion Order
+
+**All-At-Once Strategy: All projects converted simultaneously, but execution must respect dependency order for verification.**
+
+| Order | Project | Language | Type | Dependencies | Complexity |
+|-------|---------|----------|------|--------------|------------|
+| 1 | LinqOptimizer.Core | F# | Library | None | High (21 F# files, packages.config, FSharp.Core migration) |
+| 2 | LinqOptimizer.Base | C# | Library | Core | Low (simple, no packages) |
+| 3 | LinqOptimizer.FSharp | F# | Library | Base, Core | Medium (4 F# files, GAC FSharp.Core reference) |
+| 4 | LinqOptimizer.Tests.FSharp | F# | Exe | FSharp, Base, Core | High (duplicate FSharp.Core, packages.config, legacy NuGet) |
+| 5 | LinqOptimizer.CSharp | C# | Library | Base, Core | Low (simple, no packages) |
+| 6 | LinqOptimizer.Tests.CSharp | C# | Exe | CSharp, Base, Core, Tests.FSharp | High (packages.config, legacy NuGet, Release-Mono config) |
+
+**Note**: While all projects are converted atomically, validation follows this order to catch dependency-related issues early.
+
+### Project Groupings for Atomic Conversion
+
+**All-At-Once Batching**: All 6 projects are updated in a single coordinated operation.
+
+**Grouping for context** (not sequential execution):
+- **Foundation Layer** (2 projects): Core (F#), Base (C#) — no packages.config in Base
+- **Library Layer** (2 projects): CSharp (C#), FSharp (F#) — no packages.config
+- **Test Layer** (2 projects): Tests.CSharp (C#), Tests.FSharp (F#) — both have packages.config
+
+### Critical Path Analysis
+
+**Critical path**: Core → Base → {CSharp, FSharp} → Tests
+
+**Blocking factors** (must be resolved during atomic conversion):
+1. **F# file ordering** — All 3 F# projects (Core: 21 files, FSharp: 4 files, Tests.FSharp: 4 files)
+2. **Duplicate FSharp.Core** in Tests.FSharp — Must be resolved before build succeeds
+3. **packages.config in Core** — Blocks implicit FSharp.Core reference strategy
+
+**No circular dependencies** — Clean forward dependencies enable straightforward atomic conversion.
+
+### Language-Specific Considerations
+
+**C# Projects** (3 projects):
+- SDK-style auto-globs source files (no explicit `<Compile>` needed unless overriding)
+- AssemblyInfo.cs files in Properties\ folders (2 projects) — handle via `GenerateAssemblyInfo=false`
+- Framework references (System, System.Core, etc.) — implicit in SDK-style, remove explicit refs
+
+**F# Projects** (3 projects):
+- **Must** preserve explicit ordered `<Compile>` elements (F# is order-dependent)
+- FSharp.Core references vary by project — all must migrate to SDK implicit reference
+- Legacy FSharpTargetsPath/Choose blocks — remove (SDK handles this)
+- AssemblyInfo.fs files (2 projects) — handle via `GenerateAssemblyInfo=false`
+
+### Cross-Language Dependencies
+
+**C# → F# references**: Base → Core, CSharp → Core, Tests.CSharp → Core & Tests.FSharp  
+**F# → C# references**: FSharp → Base, Tests.FSharp → Base  
+**Mixed**: Both C# and F# projects reference each other
+
+**SDK-style handling**: `<ProjectReference>` elements work identically for cross-language references in SDK-style projects. No special handling required beyond ensuring correct conversion order.
+
+---
+
+## Project-by-Project Migration Plans
+
+[To be filled]
+
+---
+
+## Risk Management
+
+[To be filled]
+
+---
+
+## Testing & Validation Strategy
+
+[To be filled]
+
+---
+
+## Complexity & Effort Assessment
+
+[To be filled]
+
+---
+
+## Source Control Strategy
+
+[To be filled]
+
+---
+
+## Success Criteria
+
+[To be filled]
+
+---
+
+*This plan was generated by the Planning Agent based on assessment findings.*
