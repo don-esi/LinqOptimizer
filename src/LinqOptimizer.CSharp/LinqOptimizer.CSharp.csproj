@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LinqOptimizer.CSharp.xml</DocumentationFile>
+	<TargetFramework>net10.0</TargetFramework>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LinqOptimizer.CSharp.xml</DocumentationFile>
+	<PlatformTarget>x64</PlatformTarget>
+	<Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LinqOptimizer.Base\LinqOptimizer.Base.csproj" />
-    <ProjectReference Include="..\LinqOptimizer.Core\LinqOptimizer.Core.fsproj" />
+	<ProjectReference Include="..\LinqOptimizer.Base\LinqOptimizer.Base.csproj" />
+	<ProjectReference Include="..\LinqOptimizer.Core\LinqOptimizer.Core.fsproj" />
   </ItemGroup>
 
 </Project>
